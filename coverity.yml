@@ -1,7 +1,7 @@
 name: coverity-scan
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main" ] # Hoặc tên nhánh chính của bạn
 
 jobs:
   latest:
@@ -14,20 +14,17 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           
-      - name: Build with Cov-Build
+      - name: Build and Submit
         run: |
           wget https://scan.coverity.com/download/linux64 --post-data "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=Coverity-Project" -O coverity_tool.tgz
           mkdir coverity_tool
           tar xzf coverity_tool.tgz --strip-components=1 -C coverity_tool
           export PATH=$PWD/coverity_tool/bin:$PATH
-          cov-build --dir cov-int ./mvnw clean compile
-          
-      - name: Submit to Coverity Scan
-        run: |
+          # Dự án của bạn dùng Maven wrapper nên dùng lệnh này:
+          ./mvnw clean compile
           tar czf myproject.tgz cov-int
           curl --form token=${{ secrets.COVERITY_SCAN_TOKEN }} \
             --form email=jackyduy2304@gmail.com \
             --form file=@myproject.tgz \
             --form version="v1.0" \
-            --form description="Testing Coverity" \
             https://scan.coverity.com/builds?project=Coverity-Project
