@@ -1,0 +1,33 @@
+name: coverity-scan
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  latest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          
+      - name: Build with Cov-Build
+        run: |
+          wget https://scan.coverity.com/download/linux64 --post-data "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=Coverity-Project" -O coverity_tool.tgz
+          mkdir coverity_tool
+          tar xzf coverity_tool.tgz --strip-components=1 -C coverity_tool
+          export PATH=$PWD/coverity_tool/bin:$PATH
+          cov-build --dir cov-int ./mvnw clean compile
+          
+      - name: Submit to Coverity Scan
+        run: |
+          tar czf myproject.tgz cov-int
+          curl --form token=${{ secrets.COVERITY_SCAN_TOKEN }} \
+            --form email=jackyduy2304@gmail.com \
+            --form file=@myproject.tgz \
+            --form version="v1.0" \
+            --form description="Testing Coverity" \
+            https://scan.coverity.com/builds?project=Coverity-Project
