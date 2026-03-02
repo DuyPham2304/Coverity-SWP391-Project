@@ -16,21 +16,20 @@ jobs:
           
       - name: Build and Submit
         run: |
-          # 1. Tải công cụ
-          wget https://scan.coverity.com/download/linux64 --post-data "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=Coverity-Project" -O coverity_tool.tgz
+          # Tải công cụ bằng mã Token của Duy
+          wget https://scan.coverity.com/download/linux64 --post-data "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=${{ github.event.repository.name }}" -O coverity_tool.tgz
           mkdir coverity_tool
           tar xzf coverity_tool.tgz --strip-components=1 -C coverity_tool
           export PATH=$PWD/coverity_tool/bin:$PATH
           
-          # 2. Biên dịch
+          # Biên dịch Java
           chmod +x mvnw
           cov-build --dir cov-int ./mvnw clean compile
           
-          # 3. Nén và gửi (Chú ý tên project phải khớp 100%)
+          # Nén và gửi bằng link chính xác từ GitHub
           tar czf myproject.tgz cov-int
           curl --form token=${{ secrets.COVERITY_SCAN_TOKEN }} \
-            --form email=jackyduy2304@gmail.com \
+            --form email=${{ github.actor }}@gmail.com \
             --form file=@myproject.tgz \
             --form version="v1.0" \
-            --form description="Duy test scan" \
-            https://scan.coverity.com/builds?project=Coverity-Project
+            "https://scan.coverity.com/builds?project=${{ github.event.repository.name }}"
